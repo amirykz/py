@@ -1,58 +1,71 @@
 import openpyxl
 
-# بارگذاری فایل اکسل
+class ExcelManager:
+    def __init__(self, file_path):
+        self.file_path = file_path
+        self.workbook = openpyxl.load_workbook(file_path)
+        self.sheet = self.workbook.active
+
+    def delete_column(self, col_idx):
+        self.sheet.delete_cols(col_idx)
+        self.workbook.save(self.file_path)
+
+    def delete_row(self, row_idx):
+        self.sheet.delete_rows(row_idx)
+        self.workbook.save(self.file_path)
+
+    def show_students_in_range(self, min_gpa=14, max_gpa=17):
+        students_in_range = []
+        for row in self.sheet.iter_rows(min_row=2, values_only=True):
+            gpa = row[-1]
+            try:
+                gpa = float(gpa)
+                if min_gpa <= gpa <= max_gpa:
+                    students_in_range.append(row)
+            except ValueError:
+                continue
+        return students_in_range
+
+    def best_student(self):
+        best_student = None
+        highest_gpa = -1
+        for row in self.sheet.iter_rows(min_row=2, values_only=True):
+            gpa = row[-1]
+            try:
+                gpa = float(gpa)
+                if gpa > highest_gpa:
+                    highest_gpa = gpa
+                    best_student = row
+            except ValueError:
+                continue
+        return best_student
+
+    def save(self):
+        """
+        ذخیره تغییرات در فایل اکسل
+        """
+        self.workbook.save(self.file_path)
+
+# استفاده از کلاس
 file_path = 'C:\\Users\\amira\\Desktop\\pyda\\open\\01.xlsx'
-workbook = openpyxl.load_workbook(file_path)
-sheet = workbook.active
+manager = ExcelManager(file_path)
 
-# تابع حذف ستون مشخص
-def delete_column(sheet, col_idx):
-    sheet.delete_cols(col_idx)
-    workbook.save(file_path)
+# حذف ستون (مثال: ستون 2)
+# manager.delete_column(2)
 
-# تابع حذف ردیف مشخص
-def delete_row(sheet, row_idx):
-    sheet.delete_rows(row_idx)
-    workbook.save(file_path)
-
-# تابع نمایش دانشجویان با معدل بین 14 و 17
-def show_students_in_range(sheet, min_gpa=14, max_gpa=17):
-    students_in_range = []
-    for row in sheet.iter_rows(min_row=2, values_only=True):
-        gpa = row[-1]
-        try:
-            gpa = float(gpa)  # تبدیل معدل به عدد
-            if min_gpa <= gpa <= max_gpa:
-                students_in_range.append(row)
-        except ValueError:
-            continue  # اگر مقدار قابل تبدیل به عدد نبود، ادامه می‌دهیم
-    return students_in_range
-
-# تابع نمایش بهترین دانشجو بر اساس معدل
-def best_student(sheet):
-    best_student = None
-    highest_gpa = -1
-    for row in sheet.iter_rows(min_row=2, values_only=True):
-        gpa = row[-1]
-        try:
-            gpa = float(gpa)  # تبدیل معدل به عدد
-            if gpa > highest_gpa:
-                highest_gpa = gpa
-                best_student = row
-        except ValueError:
-            continue  # اگر مقدار قابل تبدیل به عدد نبود، ادامه می‌دهیم
-    return best_student
+# حذف ردیف (مثال: ردیف 3)
+# manager.delete_row(3)
 
 # نمایش دانشجویان با معدل بین 14 و 17
-students_in_range = show_students_in_range(sheet)
+students_in_range = manager.show_students_in_range()
 print("دانشجویان با معدل بین 14 و 17:")
 for student in students_in_range:
     print(student)
 
 # نمایش بهترین دانشجو
-best_student_info = best_student(sheet)
+best_student_info = manager.best_student()
 print("بهترین دانشجو بر اساس معدل:")
 print(best_student_info)
 
 # ذخیره تغییرات در فایل اصلی
-workbook.save(file_path)
+manager.save()
